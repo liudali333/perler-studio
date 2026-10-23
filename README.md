@@ -71,3 +71,20 @@ perler-studio/
 `python setup_pipeline.py` 从本机已安装的技能里自动拷贝。
 
 图片只在本机处理，`perler/jobs/` 里可随时手动备份或清理。
+
+## 联系作者 & 赞赏支持
+
+<table align="center">
+  <tr>
+    <td align="center">
+      <b>联系作者</b><br><br>
+      <img src="icons/wechat-qr.png" alt="微信联系方式" width="200"/><br>
+      <small>扫码添加微信</small>
+    </td>
+    <td align="center">
+      <b>赞赏支持</b><br><br>
+      <img src="icons/zanshang.png" alt="赞赏码" width="200"/><br>
+      <small>如果觉得有帮助，欢迎赞赏</small>
+    </td>
+  </tr>
+</table>
