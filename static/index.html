@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>拼豆图纸工坊 · 一张图变一张图纸</title>
+<style>
+:root{
+  --bg:#0F1923; --panel:#141F2A; --panel2:#1B2937; --line:#2A3B4D; --line2:#46586A;
+  --red:#FF4655; --teal:#00C8C8; --txt:#ECE8E1; --txt2:#8FA3B3; --txt3:#5B6B7A; --paper:#F5F2EA;
+  --font-d:"Rajdhani","DIN Alternate","Bahnschrift","Noto Sans SC",system-ui,sans-serif;
+  --font-b:"Noto Sans SC","PingFang SC",system-ui,sans-serif;
+  --cut:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+  --cut-sm:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh; background:var(--bg); color:var(--txt); font-family:var(--font-b); font-size:14px;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255,255,255,.012) 0 2px, transparent 2px 8px),
+    radial-gradient(1100px 520px at 82% -8%, rgba(255,70,85,.10), transparent 62%),
+    radial-gradient(900px 480px at -5% 108%, rgba(0,200,200,.07), transparent 60%);
+  -webkit-text-size-adjust:100%;
+}
+a{color:var(--teal); text-decoration:none}
+.wrap{max-width:1120px; margin:0 auto; padding:26px 20px 70px}
+
+/* 顶栏 */
+.top{display:flex; align-items:center; gap:14px; margin-bottom:26px; flex-wrap:wrap}
+.logo{width:34px; height:34px; flex:none; display:grid; place-items:center; background:var(--red); clip-path:var(--cut-sm); font-family:var(--font-d); font-weight:700; font-size:17px}
+.brand{font-family:var(--font-d); font-size:19px; font-weight:700; letter-spacing:.08em}
+.brand em{font-style:normal; color:var(--teal)}
+.tagline{font-size:12px; color:var(--txt2); letter-spacing:.06em; margin-top:2px}
+.top .spacer{flex:1}
+.hint-link{font-size:12px; color:var(--txt2); border:1px solid var(--line); padding:6px 10px; clip-path:var(--cut-sm); background:var(--panel2)}
+
+/* 上传区 */
+.hero{display:grid; grid-template-columns:1.35fr .85fr; gap:18px; align-items:stretch}
+@media(max-width:900px){.hero{grid-template-columns:1fr}}
+.drop{
+  position:relative; border:1px dashed var(--line2); background:var(--panel); clip-path:var(--cut);
+  min-height:330px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:12px; padding:26px; text-align:center; cursor:pointer; transition:border-color .18s, background .18s;
+}
+.drop:hover,.drop.over{border-color:var(--teal); background:#16232f}
+.drop.over{background:#17303a}
+.drop .ico{width:64px; height:64px; border:2px solid var(--line2); display:grid; place-items:center; color:var(--txt2); font-size:26px; clip-path:var(--cut-sm)}
+.drop h2{font-family:var(--font-d); font-size:23px; letter-spacing:.06em}
+.drop p{font-size:12.5px; color:var(--txt2); line-height:1.7; max-width:420px}
+.drop .fmt{font-size:11px; color:var(--txt3); letter-spacing:.16em}
+.drop input[type=file]{position:absolute; inset:0; opacity:0; cursor:pointer}
+.preview{position:relative; width:100%; display:none}
+.preview.on{display:block}
+.preview img{max-width:100%; max-height:270px; display:block; margin:0 auto; background:
+  repeating-conic-gradient(#26333f 0 25%, #1e2a35 0 50%) 0 0/16px 16px; image-rendering:auto}
+.preview .meta{font-size:11.5px; color:var(--txt2); margin-top:8px; letter-spacing:.04em}
+.preview .meta b{color:var(--txt)}
+.clear{position:absolute; top:6px; right:6px; background:rgba(15,25,35,.85); border:1px solid var(--line2); color:var(--txt2); width:26px; height:26px; cursor:pointer; font-size:13px}
+.clear:hover{color:var(--red); border-color:var(--red)}
+
+/* 设置卡 */
+.card{background:var(--panel); border:1px solid var(--line); clip-path:var(--cut); padding:16px 16px 14px}
+.card h3{font-family:var(--font-d); font-size:13px; letter-spacing:.18em; color:var(--txt2); margin-bottom:12px; display:flex; gap:7px; align-items:center}
+.card h3::before{content:""; width:7px; height:7px; background:var(--red); clip-path:polygon(0 0,100% 0,100% 100%); transform:rotate(135deg)}
+.field{margin-bottom:12px}
+.field label{display:block; font-size:11.5px; color:var(--txt2); margin-bottom:6px; letter-spacing:.04em}
+.field input[type=text],.field input[type=number],.field select{
+  width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--txt);
+  padding:8px 10px; font-family:var(--font-b); font-size:13px; outline:none;
+}
+.field input:focus,.field select:focus{border-color:var(--teal)}
+.boards{display:flex; gap:6px; flex-wrap:wrap}
+.boards button{
+  flex:1 1 auto; min-width:64px; padding:7px 4px; background:var(--panel2); border:1px solid var(--line);
+  color:var(--txt2); cursor:pointer; font-family:var(--font-d); font-size:13px; font-weight:600; letter-spacing:.04em;
+  clip-path:var(--cut-sm); transition:all .15s;
+}
+.boards button.on{border-color:var(--red); color:var(--txt); background:linear-gradient(180deg,rgba(255,70,85,.24),var(--panel2))}
+.range{display:flex; align-items:center; gap:10px}
+.range input[type=range]{flex:1; accent-color:var(--red)}
+.range b{font-family:var(--font-d); color:var(--teal); font-size:14px; min-width:44px; text-align:right}
+.switch{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--txt2); cursor:pointer; margin-bottom:8px}
+.switch input{accent-color:var(--teal); width:15px; height:15px}
+.go{
+  width:100%; margin-top:6px; padding:13px; border:none; cursor:pointer;
+  background:var(--red); color:#fff; font-family:var(--font-d); font-size:16px; font-weight:700; letter-spacing:.14em;
+  clip-path:var(--cut-sm); transition:filter .15s, opacity .15s;
+}
+.go:hover{filter:brightness(1.08)}
+.go:disabled{opacity:.45; cursor:not-allowed; filter:none}
+.go small{display:block; font-family:var(--font-b); font-size:10.5px; font-weight:400; letter-spacing:.04em; opacity:.8; margin-top:2px}
+
+/* 进行中 */
+.progress{display:none; margin-top:18px; background:var(--panel); border:1px solid var(--line2); padding:16px; clip-path:var(--cut)}
+.progress.on{display:block}
+.progress .row{display:flex; align-items:center; gap:12px}
+.spin{width:22px; height:22px; border:2px solid var(--line2); border-top-color:var(--red); border-radius:50%; animation:sp .8s linear infinite; flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+.progress .st{font-size:13px}
+.progress .st b{font-family:var(--font-d); color:var(--teal); letter-spacing:.06em}
+.bar{height:3px; background:var(--line); margin-top:12px; overflow:hidden}
+.bar i{display:block; height:100%; width:30%; background:linear-gradient(90deg,var(--red),var(--teal)); animation:bar 1.4s ease-in-out infinite}
+@keyframes bar{0%{transform:translateX(-100%)}100%{transform:translateX(360%)}}
+.err{display:none; margin-top:14px; border:1px solid var(--red); background:rgba(255,70,85,.08); padding:12px 14px; font-size:12.5px; line-height:1.6}
+.err.on{display:block}
+
+/* 作品列表 */
+.section-hd{display:flex; align-items:baseline; gap:12px; margin:34px 0 14px}
+.section-hd h2{font-family:var(--font-d); font-size:16px; letter-spacing:.14em}
+.section-hd span{font-size:11.5px; color:var(--txt3); letter-spacing:.06em}
+.gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(212px,1fr)); gap:14px}
+.work{background:var(--panel); border:1px solid var(--line); clip-path:var(--cut); overflow:hidden; position:relative; transition:border-color .15s}
+.work:hover{border-color:var(--teal)}
+.work .thumb{aspect-ratio:1; background:var(--panel2); display:grid; place-items:center; overflow:hidden; cursor:pointer}
+.work .thumb img{width:100%; height:100%; object-fit:contain; image-rendering:auto}
+.work .thumb .ph{color:var(--txt3); font-size:12px; letter-spacing:.1em; padding:20px; text-align:center; line-height:1.7}
+.work .info{padding:10px 12px 12px; border-top:1px solid var(--line)}
+.work .nm{font-family:var(--font-d); font-size:14px; font-weight:600; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.work .sub{font-size:10.5px; color:var(--txt3); margin-top:3px; letter-spacing:.04em}
+.work .acts{display:flex; gap:6px; margin-top:10px}
+.work .acts a,.work .acts button{
+  flex:1; text-align:center; padding:6px 4px; font-size:11.5px; border:1px solid var(--line);
+  background:var(--panel2); color:var(--txt2); cursor:pointer; clip-path:var(--cut-sm); font-family:var(--font-b);
+}
+.work .acts a:hover,.work .acts button:hover{border-color:var(--teal); color:var(--txt)}
+.work .acts .primary{background:var(--red); border-color:var(--red); color:#fff}
+.work .del{position:absolute; top:6px; right:6px; width:24px; height:24px; border:1px solid var(--line2); background:rgba(15,25,35,.8); color:var(--txt2); cursor:pointer; font-size:12px; display:none}
+.work:hover .del{display:block}
+.work .del:hover{color:var(--red); border-color:var(--red)}
+.empty{color:var(--txt3); font-size:12.5px; padding:22px; border:1px dashed var(--line); text-align:center; clip-path:var(--cut)}
+
+/* 说明 */
+.notes{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin-top:40px}
+.note{background:var(--panel); border:1px solid var(--line); padding:14px 16px; clip-path:var(--cut)}
+.note b{display:block; font-family:var(--font-d); font-size:13px; letter-spacing:.1em; margin-bottom:6px; color:var(--txt)}
+.note p{font-size:12px; color:var(--txt2); line-height:1.75}
+.toast{
+  position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(14px); opacity:0; pointer-events:none;
+  background:var(--panel2); border:1px solid var(--teal); color:var(--txt); padding:10px 18px; font-size:12.5px;
+  transition:all .22s; z-index:99; max-width:86vw;
+}
+.toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="logo">豆</div>
+    <div>
+      <div class="brand">拼豆图纸<em>工坊</em></div>
+      <div class="tagline">上传一张图，几秒钟变成能照着拼的图纸</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="hint-link">本地运行 · 图片不出这台电脑</div>
+  </div>
+
+  <div class="hero">
+    <!-- 上传 -->
+    <label class="drop" id="drop" for="file">
+      <div class="ico">↑</div>
+      <h2>把图片拖进来，或点这里选</h2>
+      <p>角色、宠物、头像、表情包、枪皮都可以。背景干净、主体完整的图出来的豆格最准。</p>
+      <div class="fmt">PNG · JPG · WEBP · BMP · GIF　单张 12MB 以内</div>
+      <input type="file" id="file" accept="image/*">
+      <div class="preview" id="preview">
+        <button class="clear" id="clear" type="button" title="换一张">✕</button>
+        <img id="previewImg" alt="待转换的图片">
+        <div class="meta" id="previewMeta"></div>
+      </div>
+    </label>
+
+    <!-- 设置 -->
+    <div class="card">
+      <h3>出图设置</h3>
+      <div class="field">
+        <label>作品名（会印在图纸标题上）</label>
+        <input type="text" id="taskName" placeholder="不填就用图片文件名" maxlength="24">
+      </div>
+      <div class="field">
+        <label>做哪几档板子</label>
+        <div class="boards" id="boards">
+          <button type="button" data-b="36" class="on">36</button>
+          <button type="button" data-b="52" class="on">52</button>
+          <button type="button" data-b="78" class="on">78</button>
+          <button type="button" data-b="104">104</button>
+          <button type="button" data-b="156">156</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>最多用几种颜色</label>
+        <div class="range"><input type="range" id="colors" min="8" max="40" value="28"><b id="colorsVal">28 色</b></div>
+      </div>
+      <label class="switch"><input type="checkbox" id="trim" checked>去掉图外圈的白边</label>
+      <label class="switch"><input type="checkbox" id="merge">合并相近颜色（画面出现花斑时打开）</label>
+      <button class="go" id="go" disabled>开始做图纸<small>大约 20 秒，做完直接打开</small></button>
+    </div>
+  </div>
+
+  <div class="progress" id="progress">
+    <div class="row"><div class="spin"></div><div class="st" id="progText">准备中…</div></div>
+    <div class="bar"><i></i></div>
+  </div>
+  <div class="err" id="err"></div>
+
+  <div class="section-hd"><h2>我的图纸</h2><span id="count">0 份</span></div>
+  <div class="gallery" id="gallery"></div>
+
+  <div class="notes">
+    <div class="note"><b>图纸能做什么</b><p>换 25 套色板、调颜色数量、加自定义尺寸；逐格改色、套索、撤销；看 3D 成品效果；导出带色号用量和进度表的图纸海报。</p></div>
+    <div class="note"><b>为什么有的图更好看</b><p>主体占满画面、背景干净、轮廓清楚的图最准。人物建议用半身或全身的干净图；太杂的背景会挤成一团。</p></div>
+    <div class="note"><b>关于色号</b><p>默认按 MARD 221 色取最接近的颜色，也能切换成国产和海外其他品牌色板，色板在图纸页面里换。</p></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const state = { file: null, boards: new Set([36, 52, 78]), polling: null };
+let toastTimer;
+function toast(t) {
+  const el = $('#toast'); el.textContent = t; el.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), 2600);
+}
+function fmtSize(n) { return n > 1024 * 1024 ? (n / 1024 / 1024).toFixed(1) + ' MB' : Math.round(n / 1024) + ' KB'; }
+
+/* 选图 */
+$('#file').onchange = e => {
+  const f = e.target.files && e.target.files[0];
+  if (f) pick(f);
+};
+const drop = $('#drop');
+['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => {
+  const f = e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) pick(f);
+});
+function pick(f) {
+  if (!f.type.startsWith('image/')) return toast('这个文件不是图片');
+  if (f.size > 12 * 1024 * 1024) return toast('图片超过 12MB，先压缩一下');
+  state.file = f;
+  const url = URL.createObjectURL(f);
+  const im = $('#previewImg');
+  im.onload = () => {
+    $('#previewMeta').innerHTML = `<b>${f.name}</b> · ${im.naturalWidth}×${im.naturalHeight} · ${fmtSize(f.size)}`;
+    URL.revokeObjectURL(url);
+  };
+  im.src = url;
+  $('#preview').classList.add('on');
+  drop.querySelectorAll(':scope > .ico, :scope > h2, :scope > p, :scope > .fmt').forEach(n => n.style.display = 'none');
+  if (!$('#taskName').value) $('#taskName').value = f.name.replace(/\.[^.]+$/, '').slice(0, 24);
+  $('#go').disabled = state.boards.size === 0;
+}
+$('#clear').onclick = e => {
+  e.preventDefault(); e.stopPropagation();
+  state.file = null;
+  $('#preview').classList.remove('on');
+  drop.querySelectorAll(':scope > .ico, :scope > h2, :scope > p, :scope > .fmt').forEach(n => n.style.display = '');
+  $('#file').value = '';
+  $('#go').disabled = true;
+};
+
+/* 设置 */
+$('#boards').onclick = e => {
+  const b = e.target.closest('button[data-b]');
+  if (!b) return;
+  const n = Number(b.dataset.b);
+  if (state.boards.has(n)) {
+    if (state.boards.size === 1) return toast('至少留一档');
+    state.boards.delete(n); b.classList.remove('on');
+  } else { state.boards.add(n); b.classList.add('on'); }
+  $('#go').disabled = !state.file || state.boards.size === 0;
+};
+$('#colors').oninput = e => { $('#colorsVal').textContent = e.target.value + ' 色'; };
+
+/* 开工 */
+$('#go').onclick = async () => {
+  if (!state.file) return;
+  const fd = new FormData();
+  fd.append('file', state.file);
+  fd.append('task', $('#taskName').value.trim());
+  fd.append('boards', [...state.boards].sort((a, b) => a - b).join(','));
+  fd.append('max_colors', $('#colors').value);
+  fd.append('trim_border', $('#trim').checked);
+  fd.append('merge_colors', $('#merge').checked);
+  $('#go').disabled = true;
+  $('#err').classList.remove('on');
+  $('#progress').classList.add('on');
+  $('#progText').innerHTML = '正在上传图片…';
+  try {
+    const r = await fetch('/api/convert', { method: 'POST', body: fd });
+    const job = await r.json();
+    if (!r.ok) throw new Error(job.detail || '上传失败');
+    poll(job.id);
+  } catch (e) {
+    fail(e.message || String(e));
+  }
+};
+function fail(msg) {
+  $('#progress').classList.remove('on');
+  $('#err').textContent = '没做成：' + msg;
+  $('#err').classList.add('on');
+  $('#go').disabled = !state.file;
+}
+function poll(id) {
+  clearInterval(state.polling);
+  state.polling = setInterval(async () => {
+    try {
+      const j = await (await fetch('/api/jobs/' + id)).json();
+      if (j.status === 'done') {
+        clearInterval(state.polling);
+        $('#progress').classList.remove('on');
+        $('#go').disabled = !state.file;
+        toast('图纸做好啦，正在打开');
+        loadGallery();
+        window.open('/api/jobs/' + id + '/blueprint', '_blank');
+      } else if (j.status === 'error') {
+        clearInterval(state.polling);
+        fail(j.error || '转换出错');
+      } else {
+        $('#progText').innerHTML = `<b>${j.task}</b> · ${j.step || '正在做图纸'}`;
+      }
+    } catch (e) { /* 网络抖动，下一轮再问 */ }
+  }, 900);
+}
+
+/* 作品列表 */
+async function loadGallery() {
+  const list = await (await fetch('/api/jobs')).json();
+  const done = list.filter(j => j.status === 'done');
+  const running = list.filter(j => j.status === 'running' || j.status === 'queued');
+  $('#count').textContent = done.length + ' 份';
+  const g = $('#gallery');
+  if (!list.length) {
+    g.innerHTML = '<div class="empty">还没有图纸。挑一张图开始吧。</div>';
+    return;
+  }
+  g.innerHTML = list.map(j => {
+    const ok = j.status === 'done';
+    return `<div class="work" data-id="${j.id}">
+      <div class="thumb">${ok && j.source ? `<img src="${j.source}" alt="${j.task}">` : `<div class="ph">${j.status === 'error' ? '这版没做成' : (j.step || '正在做图纸')}</div>`}</div>
+      <button class="del" data-del="${j.id}" title="删掉这份">✕</button>
+      <div class="info">
+        <div class="nm">${escapeHtml(j.task || '拼豆图纸')}</div>
+        <div class="sub">${(j.boards || []).join(' · ')} 格　${(j.created || '').slice(5, 16)}</div>
+        <div class="acts">
+          ${ok ? `<a class="primary" href="/api/jobs/${j.id}/blueprint" target="_blank">打开图纸</a>
+                  <a href="/api/jobs/${j.id}/download">下载</a>` : `<a href="/api/jobs/${j.id}/blueprint" target="_blank">看看进度</a>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  g.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+    if (!confirm('删掉这份图纸？')) return;
+    await fetch('/api/jobs/' + b.dataset.del, { method: 'DELETE' });
+    loadGallery();
+    toast('已删除');
+  });
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+loadGallery();
+setInterval(() => { if (!state.polling) loadGallery(); }, 6000);
+</script>
+</body>
+</html>

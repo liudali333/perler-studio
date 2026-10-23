@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+perler/jobs/
+pipeline/
+templates/
+.venv/
+.DS_Store
